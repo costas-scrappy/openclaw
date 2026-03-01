@@ -1,6 +1,8 @@
 services:
   openclaw-gateway:
-    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    image: openclaw-scrappy:latest
+    group_add:
+      - "988"  # Add host's docker group
     environment:
       HOME: /home/node
       TERM: xterm-256color
@@ -9,11 +11,20 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
     volumes:
-      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+      - ~/libraries:/home/node/libraries   #git directory
+      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw:U,z
+      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace:U,z
+      - ~/work/dev:/home/node/dev
+      - ~/work/work:/home/node/work
+      - ~/work/personal:/home/node/personal
+      - ~/.aws:/home/node/.aws:ro
+      - ~/.ssh:/home/node/.ssh:rw
+      - ~/.ms365:/home/node/.ms365:ro
+      - /var/run/docker.sock:/var/run/docker.sock #we need this so that openclaw can run docker commands
     ports:
       - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+      - "8765:8765"  #memU sqlite Web UI
     init: true
     restart: unless-stopped
     command:
@@ -28,7 +39,9 @@ services:
       ]
 
   openclaw-cli:
-    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    image: openclaw-scrappy:latest
+    group_add:
+      - "988"  # Add host's docker group
     environment:
       HOME: /home/node
       TERM: xterm-256color
